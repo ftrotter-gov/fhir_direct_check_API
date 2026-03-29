@@ -1,10 +1,15 @@
-# {{ cookiecutter.project_name }}
+# FHIR Direct Check API
 
-{{ cookiecutter.project_description }}
+Creates a docker service that hosts a simple API that will validate one or several Direct/FHIR endpoints. 
+
+Intended to be run as a public service but will refuse to allow at scale access without auth/allowlisting.
 
 ## About the Project
 
-**{project_statement}**
+Lets you see if a given SMTP address is actually a Direct Address by checking DNS/LDAP.
+Lets you see if a given FHIR address is valid based on available default url availability. 
+
+Using [getdc](https://github.com/TransparentHealth/getdc) and [inspectorfhir](https://github.com/TransparentHealth/inspectorfhir) underneath!
 
 <!---
 ### Project Vision

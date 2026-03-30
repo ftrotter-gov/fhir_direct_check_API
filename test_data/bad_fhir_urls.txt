@@ -1,0 +1,3 @@
+# Bad FHIR URLs - Should return is_valid_fhir: false
+https://fredtrotter.com
+https://cms.gov

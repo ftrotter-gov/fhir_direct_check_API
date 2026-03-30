@@ -1,0 +1,2 @@
+# Good FHIR URLs - Should return is_valid_fhir: true
+https://epicfhir.aurora.org/FHIR/MYAURORA/api/FHIR/DSTU2/

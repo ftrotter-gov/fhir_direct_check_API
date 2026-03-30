@@ -1,0 +1,2 @@
+# Good Direct Addresses - Should return is_valid_direct: true
+22688EL@mchd.cernerdirect.com

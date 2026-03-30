@@ -1,0 +1,3 @@
+# Bad Direct Addresses - Should return is_valid_direct: false
+fred.trotter.email@gmail.com
+Dr.Oz.example@hotmail.com

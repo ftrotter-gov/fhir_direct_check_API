@@ -205,21 +205,52 @@ Environment variables (see `.env.example`):
 
 ## Testing
 
+### Unit and Integration Tests
+
 Run the test suite with pytest:
 
 ```bash
 # Install test dependencies
 pip install -r requirements.txt
 
-# Run tests with coverage
-pytest
+# Run all unit tests (no Docker required)
+pytest tests/test_validators.py tests/test_rate_limiter.py tests/test_routes.py
 
-# Run specific test file
-pytest tests/test_routes.py
+# Run with coverage
+pytest --cov=app --cov-report=html
 
 # Run with verbose output
 pytest -v
 ```
+
+### Docker Integration Tests
+
+The Docker integration tests spin up the full stack (API + PostgreSQL) and test against real endpoints from the `test_data/` directory:
+
+```bash
+# Run Docker integration tests
+# This will automatically start/stop docker-compose
+pytest tests/test_integration_docker.py -v -s
+
+# Or run all tests including Docker integration
+pytest -v -s
+```
+
+**Note**: Docker integration tests will:
+- Automatically start `docker-compose up -d --build`
+- Wait for services to be healthy
+- Run tests against `http://localhost:5000`
+- Automatically tear down with `docker-compose down`
+
+### Test Data
+
+Test endpoints are stored in `test_data/`:
+- `good_direct_addresses.txt` - Direct addresses that should validate
+- `bad_direct_addresses.txt` - Direct addresses that should fail validation
+- `good_fhir_urls.txt` - FHIR URLs that should validate
+- `bad_fhir_urls.txt` - FHIR URLs that should fail validation
+
+You can add more test cases to these files (one per line, `#` for comments).
 
 ## Database Schema
 

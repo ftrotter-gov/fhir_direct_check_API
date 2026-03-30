@@ -1,15 +1,40 @@
-Initial Design
-==============
+# Initial Design
 
 Please use the libraries mentioned in the ReadMe.md to make a dockerized Flask API that efficiently checks for valid Direct and FHIR endpoints.
 
-The API should take standard API practice.. and accept one or many SMTP-style possible direct addresses (i.e. could@beadirect.address) or a possible FHIR url (i.e. https://this.could.be/fhir) and then uses inspectorfhir and getdc respectively to test for validity.
+## Core Requirements
 
-The results should be save to a postgresql sql server whose password parameters should be saved in a .env file that is excluded in .gitignore.
+The API should take standard API practice and accept one or many SMTP-style possible direct addresses (i.e. could@beadirect.address) or a possible FHIR url (i.e. https://this.could.be/fhir) and then uses inspectorfhir and getdc respectively to test for validity.
+
+The results should be saved to a PostgreSQL SQL server whose password parameters should be saved in a .env file that is excluded in .gitignore.
+
+## Python Version
+
+* Use Python 3.12
+
+## Authentication & Rate Limiting
+
+* IP allowlisting approach
+* Allow unlimited access from localhost
+* All other hosts: 100 queries every 5 minutes
+
+## API Endpoints
+
+* Single unified endpoint: `POST /validate` that accepts mixed Direct/FHIR addresses
+* Health/readiness endpoints for monitoring
+* Batch download endpoint for entire table in paged JSON format (same structure as database)
+
+## Caching Behavior
+
+* Always use cached results if available (last checked < 6 months)
+* Do not implement force-refresh functionality
+* Results should indicate whether data came from cache or fresh validation
+
+## Database Schema
 
 The table structure should be:
 
-* endpoint type: DirectAddress or FHIRAddress
+* endpoint_type: DirectAddress or FHIRAddress
 * endpoint_text: The endpoint itself
 * last_checked (timestamp)
 * is_direct_dns
@@ -26,16 +51,25 @@ The table structure should be:
 * is_valid_fhir
 * is_valid_endpoint
 
-This unormalized table structure should be adjusted as needed to accomodate the getdc and inspectorfhir results when used as a library.
+This unnormalized table structure should be adjusted as needed to accommodate the getdc and inspectorfhir results when used as a library.
 
-The goal is to be able to quickly provide one or many such addresses to the API..
-have them checked... and provide the results back (a json reflection of the database contents for the various arguments)
+## API Behavior
 
-The API should support 10 endpoints at a time.
+* Accept up to 10 endpoints at a time
+* Return results on a per-address basis (results array coded by submitted addresses)
+* If an endpoint has been checked in the last 6 months, use cached results
+* For partial failures, return results for successful checks with error details for failures
+* Response format should indicate whether results came from cache or fresh validation
 
-If an endpoint has been checked in the last 6 months it should not be checked again by default.
+## Docker Configuration
 
-The library should use a dockerized flask instance. It should be testable on localhost and deployable using standard cloud docker deployment approaches.
+* Use docker-compose.yml that includes both Flask app and PostgreSQL
+* PostgreSQL configuration should support external database (configurable via .env)
+* Docker instance should include PostgreSQL to work out-of-the-box in standalone manner
+* Testable on localhost and deployable using standard cloud docker deployment approaches
 
-the postgresSQL configuration should support having a database that does not live on the same server as the service.
-But the docker instance should install a postgresql instance to ensure that it works out-of-the-box in a standalone manner.
+## Testing Requirements
+
+* Unit tests using pytest
+* Integration tests using pytest
+* Test coverage for core validation logic

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fhir_direct_postgres
+    environment:
+      POSTGRES_USER: fhir_user
+      POSTGRES_PASSWORD: fhir_password
+      POSTGRES_DB: fhir_direct_check
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fhir_user -d fhir_direct_check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: fhir_direct_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://fhir_user:fhir_password@postgres:5432/fhir_direct_check
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - MAX_ENDPOINTS_PER_REQUEST=10
+      - CACHE_VALIDITY_MONTHS=6
+      - RATE_LIMIT_REQUESTS=100
+      - RATE_LIMIT_PERIOD_MINUTES=5
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        flask db init || true &&
+        flask db migrate -m 'Initial migration' || true &&
+        flask db upgrade &&
+        flask run --host=0.0.0.0
+      "
+
+volumes:
+  postgres_data:

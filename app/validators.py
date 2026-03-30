@@ -47,22 +47,26 @@ class EndpointValidator:
             dict: Validation results mapped to database schema
         """
         try:
-            from getdc import check_direct_address
+            import sys
+            # Import workaround: getdc has broken relative imports
+            from gdc import parse_certificate
+            sys.modules['parse_certificate'] = parse_certificate
+            from gdc import get_direct_certificate
             
             # Call getdc library to check the Direct address
-            result = check_direct_address(address)
+            dcert = get_direct_certificate.DCert(address)
             
             # Map getdc results to our database schema
-            return EndpointValidator._map_getdc_results(result=result)
+            return EndpointValidator._map_getdc_results(result=dcert)
             
-        except ImportError:
+        except ImportError as e:
             return {
                 'endpoint_type': 'DirectAddress',
                 'is_direct_dns': False,
                 'is_direct_ldap': False,
                 'is_valid_direct': False,
                 'is_valid_endpoint': False,
-                'validation_error': 'validators.py Error: getdc library not available'
+                'validation_error': f'validators.py Error: getdc library not available - {str(e)}'
             }
         except Exception as e:
             return {
@@ -86,21 +90,20 @@ class EndpointValidator:
             dict: Validation results mapped to database schema
         """
         try:
-            from inspectorfhir import InspectorFHIR
+            from inspectorfhir import ifhir
             
-            # Create inspector instance and check the endpoint
-            inspector = InspectorFHIR(url)
-            result = inspector.inspect()
+            # Use inspectorfhir to build a complete result report
+            result = ifhir.build_result_report(url)
             
             # Map inspectorfhir results to our database schema
             return EndpointValidator._map_inspectorfhir_results(result=result, base_url=url)
             
-        except ImportError:
+        except ImportError as e:
             return {
                 'endpoint_type': 'FHIRAddress',
                 'is_valid_fhir': False,
                 'is_valid_endpoint': False,
-                'validation_error': 'validators.py Error: inspectorfhir library not available'
+                'validation_error': f'validators.py Error: inspectorfhir library not available - {str(e)}'
             }
         except Exception as e:
             return {
